@@ -18,11 +18,12 @@ export default function index() {
           <Stack.Screen
             name="MortyList"
             component={MortyListScreen}
+            options={{ title: 'Character Selector' }}
           />
           <Stack.Screen
             name="CharacterDetail"
             component={CharacterDetailScreen}
-            options={{ title: 'Morty Detail' }}
+            options={{ title: 'Character Detail' }}
           />
         </Stack.Navigator>
     </SafeAreaProvider>
