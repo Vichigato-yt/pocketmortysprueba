@@ -9,6 +9,7 @@ import {
   Button,
   TextInput,
 } from "react-native";
+import axios, { CancelTokenSource } from "axios";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/app";
 import type { Character, CharactersResponse } from "@/types/rmapi";
@@ -32,52 +33,66 @@ export default function MortyListScreen({ navigation }: Props) {
     )}&page=${p}`;
 
   useEffect(() => {
-    let ignore = false;
-    const controller = new AbortController();
+    let cancelSource: CancelTokenSource;
 
     async function fetchMortys() {
       setIsLoading(true);
       setError(null);
       setNotFound(false);
 
+      cancelSource = axios.CancelToken.source();
+
       try {
         const url = buildUrl(page, searchQuery);
-        const res = await fetch(url, { signal: controller.signal });
+
+        const res = await axios.get<CharactersResponse>(url, {
+          cancelToken: cancelSource.token,
+          validateStatus: (status) => status < 500, // Permite manejar 404 sin lanzar error
+        });
 
         // 👇 Detectar 404 (sin resultados)
         if (res.status === 404) {
-          if (!ignore) {
-            setNotFound(true);
-            setMortys([]); // limpiar lista
-            setNextUrl(null);
-          }
+          setNotFound(true);
+          setMortys([]);
+          setNextUrl(null);
           return;
         }
 
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`API error: ${res.status} ${text}`);
+        if (res.status !== 200 || !res.data) {
+          throw new Error(`Error ${res.status}: No se pudieron cargar los datos`);
         }
 
-        const data: CharactersResponse = await res.json();
-        if (ignore) return;
-
+        const data = res.data;
         setMortys((prev) => (page === 1 ? data.results : [...prev, ...data.results]));
         setNextUrl(data.info?.next ?? null);
       } catch (err: unknown) {
-        if (ignore) return;
-        if (err instanceof Error) setError(err.message);
-        else setError("Unknown error");
+        if (axios.isCancel(err)) {
+          console.log("⏹️ Petición cancelada");
+          return;
+        }
+
+        if (axios.isAxiosError(err)) {
+          if (err.response?.status === 404) {
+            setNotFound(true);
+            setMortys([]);
+            setNextUrl(null);
+          } else {
+            setError(`Error: ${err.message}`);
+          }
+        } else if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Error desconocido");
+        }
       } finally {
-        if (!ignore) setIsLoading(false);
+        setIsLoading(false);
       }
     }
 
     fetchMortys();
 
     return () => {
-      ignore = true;
-      controller.abort();
+      if (cancelSource) cancelSource.cancel("Componente desmontado");
     };
   }, [page, searchQuery]);
 
@@ -149,7 +164,7 @@ export default function MortyListScreen({ navigation }: Props) {
             ) : null
           }
           ListFooterComponent={() =>
-            nextUrl && !notFound ? ( // 👈 solo muestra si hay más páginas y no hay 404
+            nextUrl && !notFound ? (
               <View className="mt-4 py-2">
                 {isLoading && page > 1 ? (
                   <View className="py-3 items-center">

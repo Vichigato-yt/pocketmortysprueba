@@ -2,6 +2,7 @@
 import "@/global.css";
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, ActivityIndicator, ScrollView } from "react-native";
+import axios, { CancelTokenSource } from "axios";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/app";
 import type { Character } from "@/types/rmapi";
@@ -15,37 +16,49 @@ export default function CharacterDetailScreen({ route }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let ignore = false;
-    const controller = new AbortController();
+    let cancelSource: CancelTokenSource;
 
     async function fetchCharacter() {
       setIsLoading(true);
       setError(null);
+
+      cancelSource = axios.CancelToken.source();
+
       try {
-        const res = await fetch(`https://rickandmortyapi.com/api/character/${id}`, {
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`API error: ${res.status} ${text}`);
-        }
-        const data: Character = await res.json();
-        if (ignore) return;
-        setCharacter(data);
+        const res = await axios.get<Character>(
+          `https://rickandmortyapi.com/api/character/${id}`,
+          { cancelToken: cancelSource.token }
+        );
+
+        setCharacter(res.data);
       } catch (err: unknown) {
-        if (ignore) return;
-        if (err instanceof Error) setError(err.message);
-        else setError("Unknown error");
+        if (axios.isCancel(err)) {
+          console.log("⏹️ Petición cancelada");
+          return;
+        }
+
+        if (axios.isAxiosError(err)) {
+          if (err.response) {
+            setError(`Error ${err.response.status}: ${err.response.statusText}`);
+          } else if (err.request) {
+            setError("No se recibió respuesta del servidor");
+          } else {
+            setError(`Error desconocido: ${err.message}`);
+          }
+        } else if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Error desconocido");
+        }
       } finally {
-        if (!ignore) setIsLoading(false);
+        setIsLoading(false);
       }
     }
 
     fetchCharacter();
 
     return () => {
-      ignore = true;
-      controller.abort();
+      if (cancelSource) cancelSource.cancel("Componente desmontado");
     };
   }, [id]);
 
@@ -84,20 +97,14 @@ export default function CharacterDetailScreen({ route }: Props) {
   return (
     <ScrollView className="flex-1 bg-[#000000]">
       <View className="items-center mt-8 mb-4">
-        {/* Imagen con borde neón */}
         <View className="rounded-full border-[5px] border-[#97ce4c] shadow-[0_0_25px_#97ce4c]">
           <Image
             source={{ uri: character.image }}
-            style={{
-              width: 250,
-              height: 250,
-              borderRadius: 125,
-            }}
+            style={{ width: 250, height: 250, borderRadius: 125 }}
           />
         </View>
       </View>
 
-      {/* Caja de información */}
       <View className="mx-5 mb-10 bg-[#111827] rounded-2xl p-6 border border-[#00ff9f]/40 shadow-xl shadow-[#00ff9f]/20">
         <Text className="text-3xl font-extrabold text-center text-[#00ff9f] mb-1">
           {character.name}
@@ -127,7 +134,6 @@ export default function CharacterDetailScreen({ route }: Props) {
         </View>
       </View>
 
-      {/* Frase divertida final */}
       <View className="items-center mb-8">
         <Text className="text-[#97ce4c] text-lg font-semibold text-center">
           🛸 Wubba Lubba Dub Dub! 🛸
