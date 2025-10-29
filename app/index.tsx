@@ -18,7 +18,6 @@ export default function index() {
           <Stack.Screen
             name="MortyList"
             component={MortyListScreen}
-            options={{ title: 'Morty Selector Index' }}
           />
           <Stack.Screen
             name="CharacterDetail"

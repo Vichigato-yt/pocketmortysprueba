@@ -19,8 +19,8 @@ export default function MortyCard({ item, onPress }: Props) {
         resizeMode="cover"
       />
       <View className="flex-1">
-        <Text className="text-lg font-semibold text-gray-900">{item.name}</Text>
-        <Text className="text-sm text-gray-500">#{item.id} • {item.species}</Text>
+        <Text className="text-xl font-semibold text-gray-900">{item.name}</Text>
+        <Text className="text-l text-gray-500">#{item.id} • {item.species}</Text>
       </View>
     </TouchableOpacity>
   );

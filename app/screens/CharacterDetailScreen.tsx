@@ -80,13 +80,13 @@ export default function CharacterDetailScreen({ route }: Props) {
       </View>
 
       <View className="bg-gray-50 rounded-lg p-4 shadow">
-        <Text className="text-xl font-bold mb-2">{character.name} <Text className="text-sm text-gray-500">#{character.id}</Text></Text>
+        <Text className="text-2xl font-bold mb-2">{character.name} <Text className="text-sm text-gray-500">#{character.id}</Text></Text>
 
-        <Text className="text-sm text-gray-700"><Text className="font-semibold">Status:</Text> {character.status}</Text>
-        <Text className="text-sm text-gray-700"><Text className="font-semibold">Species:</Text> {character.species}</Text>
-        <Text className="text-sm text-gray-700"><Text className="font-semibold">Gender:</Text> {character.gender}</Text>
-        <Text className="text-sm text-gray-700 mt-2"><Text className="font-semibold">Origin:</Text> {character.origin?.name ?? 'unknown'}</Text>
-        <Text className="text-sm text-gray-700"><Text className="font-semibold">Location:</Text> {character.location?.name ?? 'unknown'}</Text>
+        <Text className="text-l text-gray-700"><Text className="font-semibold">Status:</Text> {character.status}</Text>
+        <Text className="text-l text-gray-700"><Text className="font-semibold">Species:</Text> {character.species}</Text>
+        <Text className="text-l text-gray-700"><Text className="font-semibold">Gender:</Text> {character.gender}</Text>
+        <Text className="text-l text-gray-700 mt-2"><Text className="font-semibold">Origin:</Text> {character.origin?.name ?? 'unknown'}</Text>
+        <Text className="text-l text-gray-700"><Text className="font-semibold">Location:</Text> {character.location?.name ?? 'unknown'}</Text>
       </View>
     </ScrollView>
   );
