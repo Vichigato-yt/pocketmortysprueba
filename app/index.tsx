@@ -11,21 +11,21 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export default function Index() {
+export default function index() {
   return (
     <SafeAreaProvider>
-      <Stack.Navigator initialRouteName="MortyList">
-        <Stack.Screen
-          name="MortyList"
-          component={MortyListScreen}
-          options={{ title: 'Rick y Morty API' }}
-        />
-        <Stack.Screen
-          name="CharacterDetail"
-          component={CharacterDetailScreen}
-          options={{ title: 'Character Detail' }}
-        />
-      </Stack.Navigator>
+        <Stack.Navigator initialRouteName="MortyList">
+          <Stack.Screen
+            name="MortyList"
+            component={MortyListScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CharacterDetail"
+            component={CharacterDetailScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
     </SafeAreaProvider>
   );
 }
