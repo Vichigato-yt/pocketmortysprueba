@@ -1,21 +1,30 @@
 // File: src/screens/CharacterDetailScreen.tsx
 import "@/global.css";
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ActivityIndicator, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import axios, { CancelTokenSource } from "axios";
 import { GoogleGenAI } from "@google/genai";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "@/app";
+import Markdown from "react-native-markdown-display";
 import type { Character } from "@/types/rmapi";
 
-type Props = NativeStackScreenProps<RootStackParamList, "CharacterDetail">;
-
-export default function CharacterDetailScreen({ route }: Props) {
+export default function CharacterDetailScreen({ route }: any) {
   const { id } = route.params;
+  const router = useRouter();
+
   const [character, setCharacter] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [geminiText, setGeminiText] = useState<string>("");
+  const [isGeminiLoading, setIsGeminiLoading] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelSource: CancelTokenSource;
@@ -30,9 +39,7 @@ export default function CharacterDetailScreen({ route }: Props) {
           `https://rickandmortyapi.com/api/character/${id}`,
           { cancelToken: cancelSource.token }
         );
-
         setCharacter(res.data);
-        await callGemini(res.data);
       } catch (err: unknown) {
         if (axios.isCancel(err)) return;
         if (axios.isAxiosError(err)) {
@@ -55,41 +62,43 @@ export default function CharacterDetailScreen({ route }: Props) {
     };
   }, [id]);
 
-  // 🧠 Llamada a Gemini
+  // 🧠 Función: Llamar a Gemini cuando se pulsa "Saber más"
   async function callGemini(characterData: Character) {
     try {
-      // Obtener los primeros 3 episodios del personaje
+      setIsGeminiLoading(true);
+      setGeminiText("");
+
+      // Obtener episodios
       const episodeUrls = characterData.episode.slice(0, 3);
       const episodeData = await Promise.all(
         episodeUrls.map((url) => axios.get(url).then((r) => r.data))
       );
-
       const episodeList = episodeData.map(
         (ep: any) =>
-          `Temporada ${ep.episode.slice(1, 3)}, Episodio ${ep.episode.slice(4, 6)}`
+          `T${ep.episode.slice(1, 3)}E${ep.episode.slice(4, 6)} - ${ep.name}`
       );
 
-      // Tomar personajes relacionados (sin incluir el actual)
-      const relatedCharacterUrls = episodeData
+      // Personajes relacionados
+      const relatedUrls = episodeData
         .flatMap((ep: any) => ep.characters)
         .filter((url: string) => !url.endsWith(`/${characterData.id}`))
         .slice(0, 3);
 
-      const relatedCharacters = await Promise.all(
-        relatedCharacterUrls.map((url) => axios.get(url).then((r) => r.data.name))
+      const relatedNames = await Promise.all(
+        relatedUrls.map((url) => axios.get(url).then((r) => r.data.name))
       );
 
       const prompt = `
 Eres una IA experta en Rick y Morty.
 Analiza al personaje "${characterData.name}".
 1️⃣ Aparece en: ${episodeList.join(", ")}.
-2️⃣ Otros personajes de interés: ${relatedCharacters.join(", ")}.
-3️⃣ Responde en español, breve, con emojis temáticos, saluda con Wubba Lubba Dub Dub.
-4️⃣ Resume en donde aparece, formato T(de temporada)numerodetemporadaqueapareceE(de episiodio)numerodeepisodioqueaparece.
+2️⃣ Personajes relacionados: ${relatedNames.join(", ")}.
+3️⃣ Responde en español, breve, con emojis y en formato **Markdown**.
+4️⃣ Termina con "💬 Wubba Lubba Dub Dub!"
 `;
 
       const ai = new GoogleGenAI({
-        apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY, // 👈 usa tu .env
+        apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY,
       });
 
       const response = await ai.models.generateContent({
@@ -106,10 +115,12 @@ Analiza al personaje "${characterData.name}".
           ? "⚠️ Error de conexión. Verifica tu internet."
           : "⚠️ No se pudo conectar con Gemini.";
       setGeminiText(message);
+    } finally {
+      setIsGeminiLoading(false);
     }
   }
 
-  // 🌀 Cargando
+  // 🌀 Pantalla de carga
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#0b0c10]">
@@ -144,10 +155,21 @@ Analiza al personaje "${characterData.name}".
     );
   }
 
-  // 🧪 Detalle
+  // 🧪 Render principal
   return (
     <ScrollView className="flex-1 bg-[#000000]">
-      <View className="items-center mt-8 mb-4">
+      {/* Botón de regresar */}
+      <View className="absolute top-10 left-5 z-10">
+        <TouchableOpacity
+          onPress={() => router.push("/")}
+          className="bg-[#111827]/70 p-2 rounded-full"
+        >
+          <Ionicons name="arrow-back" size={24} color="#97ce4c" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Imagen */}
+      <View className="items-center mt-16 mb-4">
         <View className="rounded-full border-[5px] border-[#97ce4c] shadow-[0_0_25px_#97ce4c]">
           <Image
             source={{ uri: character.image }}
@@ -156,7 +178,8 @@ Analiza al personaje "${characterData.name}".
         </View>
       </View>
 
-      <View className="mx-5 mb-10 bg-[#111827] rounded-2xl p-6 border border-[#00ff9f]/40 shadow-xl shadow-[#00ff9f]/20">
+      {/* Datos principales */}
+      <View className="mx-5 mb-8 bg-[#111827] rounded-2xl p-6 border border-[#00ff9f]/40 shadow-xl shadow-[#00ff9f]/20">
         <Text className="text-3xl font-extrabold text-center text-[#00ff9f] mb-1">
           {character.name}
         </Text>
@@ -188,17 +211,45 @@ Analiza al personaje "${characterData.name}".
         </View>
       </View>
 
+      {/* Sección IA de Gemini */}
       <View className="mx-5 mb-10 bg-[#0b0c10] rounded-2xl p-6 border border-[#8ee6ff]/40 shadow-lg shadow-[#00bcd4]/30">
         <Text className="text-2xl font-extrabold text-center text-[#8ee6ff] mb-4">
           IA de Rick
         </Text>
 
-        {geminiText ? (
-          <Text className="text-gray-200 leading-6">{geminiText}</Text>
-        ) : (
-          <Text className="text-gray-400 italic text-center">
-            Consultando los datos del multiverso... 🧠
-          </Text>
+        {/* Botón Saber más */}
+        {!geminiText && !isGeminiLoading && (
+          <TouchableOpacity
+            onPress={() => callGemini(character)}
+            className="bg-[#00bcd4] p-3 rounded-xl mt-2"
+          >
+            <Text className="text-white text-center font-bold text-lg">
+              🧠 Saber más
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {isGeminiLoading && (
+          <View className="items-center mt-4">
+            <ActivityIndicator size="small" color="#8ee6ff" />
+            <Text className="text-gray-400 mt-2">
+              Consultando el multiverso...
+            </Text>
+          </View>
+        )}
+
+        {geminiText !== "" && (
+          <Markdown
+            style={{
+              body: { color: "#e5e7eb", fontSize: 16, lineHeight: 22 },
+              strong: { color: "#97ce4c" },
+              heading1: { color: "#8ee6ff", fontSize: 24 },
+              bullet_list: { marginLeft: 10 },
+              paragraph: { marginTop: 6 },
+            }}
+          >
+            {geminiText}
+          </Markdown>
         )}
       </View>
 
