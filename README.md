@@ -1,53 +1,127 @@
-> Edited for use in IDX on 07/09/12
+### Rick & Morty Explorer + Gemini AI
 
-# Welcome to your Expo app 👋
+Un proyecto en React Native + Expo Router que permite explorar personajes de la serie Rick & Morty y obtener análisis avanzados generados con Gemini AI.
+Incluye un diseño moderno, soporte para Markdown bonito y efectos visuales optimizados.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## ✨ Características principales
+# 🔍 Exploración de Personajes
 
-## Get started
+Lista de personajes consumidos desde la API oficial de Rick & Morty.
 
-#### Android
+Detalles completos: estado, especie, género, origen, ubicación y más.
 
-Android previews are defined as a `workspace.onStart` hook and started as a vscode task when the workspace is opened/started.
+Imágenes con borde luminoso estilo sci-fi.
 
-Note, if you can't find the task, either:
-- Rebuild the environment (using command palette: `IDX: Rebuild Environment`), or
-- Run `npm run android -- --tunnel` command manually run android and see the output in your terminal. The device should pick up this new command and switch to start displaying the output from it.
+# 🤖 Análisis con Gemini AI
+  
+Botón "Saber más" dentro de la pantalla del personaje.
 
-In the output of this command/task, you'll find options to open the app in a
+Se hace un prompt dinámico basado en:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Episodios donde aparece el personaje.
 
-You'll also find options to open the app's developer menu, reload the app, and more.
+Personajes relacionados.
 
-#### Web
+Respuesta en Markdown bonito usando react-native-markdown-display.
 
-Web previews will be started and managred automatically. Use the toolbar to manually refresh.
+# 🧭 Navegación con Expo Router
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Navegación simple y clara basada en archivos.
 
-## Get a fresh project
+Botón superior para volver al Home usando Ionicons.
 
-When you're ready, run:
+# 🎨 UI moderna con Tailwind (NativeWind)
 
-```bash
-npm run reset-project
-```
+Estilos oscuros, vibrantes y con sombras neón.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Compatible con iOS, Android y Web.
 
-## Learn more
+## 🛠️ Tecnologías utilizadas
 
-To learn more about developing your project with Expo, look at the following resources:
+React Native (con Expo)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Expo Router
 
-## Join the community
+TypeScript
 
-Join our community of developers creating universal apps.
+NativeWind para estilos (Tailwind)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Google GenAI SDK (@google/genai)
+
+react-native-markdown-display
+
+Axios
+
+Ionicons
+
+### Instalación
+# 1️⃣ Clona el repositorio
+git clone https://github.com/tu-usuario/rick-and-morty-explorer.git
+cd rick-and-morty-explorer
+
+# 2️⃣ Instala dependencias
+npm install
+
+# 3️⃣ Agrega tu API Key de Gemini
+
+Crea un archivo .env en la raíz del proyecto:
+
+EXPO_PUBLIC_GEMINI_API_KEY=TU_API_KEY_AQUI
+
+
+⚠️ Debe comenzar con EXPO_PUBLIC_ para que Expo pueda utilizarla en el cliente.
+
+# 4️⃣ Ejecuta el proyecto
+npx expo start
+
+📂 Estructura del proyecto
+📦 src
+ ┣ 📂 screens
+ ┃ ┣ MortyListScreen.tsx
+ ┃ ┗ CharacterDetailScreen.tsx
+ ┣ 📂 components
+ ┣ 📂 types
+ ┃ ┗ rmapi.ts
+ ┣ app
+ ┃ ┣ index.tsx
+ ┃ ┗ [...routes]
+
+## 🤖 Cómo funciona la integración con Gemini
+
+Dentro de CharacterDetailScreen.tsx se prepara un prompt inteligente que:
+
+Analiza episodios donde aparece el personaje.
+
+Obtiene personajes relacionados.
+
+Pide a Gemini respuesta en español con emojis y formato Markdown.
+
+Luego el texto es renderizado con:
+
+import Markdown from "react-native-markdown-display";
+
+# 🎨 Mejoras visuales incluidas
+
+Colores temáticos de Rick & Morty.
+
+Sombra luminosa verde y azul.
+
+Botón superior para volver a la pantalla principal:
+
+<Ionicons name="arrow-back" size={24} color="#97ce4c" />
+
+## 🧪 API utilizada
+
+📡 Rick & Morty API
+https://rickandmortyapi.com/
+
+Permite obtener personajes, episodios y ubicaciones.
+
+🧑‍💻 Autor  
+
+Vicente Mendieta
+
+🛸 Wubba Lubba Dub Dub!
+
+
+![Demostración de la app](./assets/GIFAPP.gif)
